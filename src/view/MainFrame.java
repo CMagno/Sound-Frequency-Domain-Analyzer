@@ -20,6 +20,8 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jtransforms.dct.DoubleDCT_1D;
+import org.jtransforms.utils.CommonUtils;
 
 /**
  *
@@ -28,6 +30,8 @@ import org.jfree.data.xy.XYSeriesCollection;
 public class MainFrame extends javax.swing.JFrame {
     
     private static final int NUM_SAMPLES = 44000;
+    private static final double FREQ_AMOST = 48000;
+    private double[] samples;
     
     WavFile wavFile;
     
@@ -55,6 +59,8 @@ public class MainFrame extends javax.swing.JFrame {
         jMenu1 = new javax.swing.JMenu();
         menuItemOpen = new javax.swing.JMenuItem();
         menuItemQuit = new javax.swing.JMenuItem();
+        menuTransform = new javax.swing.JMenu();
+        menuItemDCT = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -120,6 +126,18 @@ public class MainFrame extends javax.swing.JFrame {
 
         menuBar.add(jMenu1);
 
+        menuTransform.setText("Transform");
+
+        menuItemDCT.setText("DCT");
+        menuItemDCT.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemDCTActionPerformed(evt);
+            }
+        });
+        menuTransform.add(menuItemDCT);
+
+        menuBar.add(menuTransform);
+
         setJMenuBar(menuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -149,10 +167,22 @@ public class MainFrame extends javax.swing.JFrame {
             try {
                 wavFile = WavFile.openWavFile(filech.getSelectedFile());
                 textArea.append(wavFile.getInfoString());
-                double[] samples = new double[wavFile.getNumChannels()* NUM_SAMPLES];
+                samples = new double[wavFile.getNumChannels()* NUM_SAMPLES];
                 int nFrames = wavFile.readFrames(samples, NUM_SAMPLES);
                 textArea.append(nFrames + " frames lidos.\n");
-                showChart(wavFile.getNumChannels()* NUM_SAMPLES, samples);
+                
+                double valuesX[] = new double[samples.length];
+                for(int i = 0; i < samples.length; i++){
+                    valuesX[i] = i;
+                }
+                
+                showChart(wavFile.getNumChannels()* NUM_SAMPLES,
+                        samples,
+                        valuesX,
+                        "Amostra",
+                        "Amplitude",
+                        "Amplitude das Amostras do Áudio",
+                        "Audio");
             } catch (IOException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
             } catch (WavFileException ex) {
@@ -170,18 +200,39 @@ public class MainFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
         System.exit(0);
     }//GEN-LAST:event_menuItemQuitActionPerformed
-    
-    public void showChart(int N, double[] signal){
+
+    private void menuItemDCTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemDCTActionPerformed
+        // TODO add your handling code here:
+        if(samples == null)
+            return;
         
-        String serieName = "Amplitudes de Amostras";
-        String tittle = "Amplitudes de Amostras";
-        String xAxisName = "Amostra";
-        String yAxisName = "Amplitude";
+        int N = samples.length;
+        double f1 = FREQ_AMOST / (2 * (N - 1));
+        
+        double[] valuesX = new double[samples.length];
+        for(int i = 0; i < samples.length; i++){
+            valuesX[i] = i * f1;
+        }
+        
+        DoubleDCT_1D dtc_calculator = new DoubleDCT_1D(N);
+        dtc_calculator.forward(samples, true);
+        
+        showChart(N, samples, valuesX, "Hz", "Amplitude", "DCT", "DCT");
+    }//GEN-LAST:event_menuItemDCTActionPerformed
+    
+    public void showChart(int N, double[] valuesY, double[] valuesX, String axisX, String axisY, String graphName, String dataName){
+        
+        graphPanel.removeAll();
+        
+        String serieName = dataName;
+        String tittle = graphName;
+        String xAxisName = axisX;
+        String yAxisName = axisY;
         
         XYSeries dataSerie = new XYSeries(serieName);
         
         for(int i = 0; i < N; i++){
-            dataSerie.add(i, signal[i]);
+            dataSerie.add(valuesX[i], valuesY[i]);
         }
         
         XYSeriesCollection sCollection = new XYSeriesCollection();
@@ -239,8 +290,10 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;
+    private javax.swing.JMenuItem menuItemDCT;
     private javax.swing.JMenuItem menuItemOpen;
     private javax.swing.JMenuItem menuItemQuit;
+    private javax.swing.JMenu menuTransform;
     private javax.swing.JTextArea textArea;
     // End of variables declaration//GEN-END:variables
 }
