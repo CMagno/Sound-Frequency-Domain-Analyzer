@@ -7,6 +7,7 @@ package view;
 
 import com.sun.media.sound.WaveFileReader;
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -192,7 +193,7 @@ public class MainFrame extends javax.swing.JFrame {
         panel.setVisible(true);
         
         graphPanel.add(panel);
-        graphPanel.setLayout(new BorderLayout());
+        graphPanel.setLayout(new GridLayout(1,0));
         graphPanel.validate();
         graphPanel.setVisible(true);
     }
