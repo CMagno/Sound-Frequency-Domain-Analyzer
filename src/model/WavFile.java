@@ -697,6 +697,17 @@ public class WavFile
 		out.printf("Sample Rate: %d, Block Align: %d\n", sampleRate, blockAlign);
 		out.printf("Valid Bits: %d, Bytes per sample: %d\n", validBits, bytesPerSample);
 	}
+        
+        public String getInfoString(){
+            StringBuilder string = new StringBuilder();
+            string.append(String.format("File: %s\n", file));
+            string.append(String.format("Channels: %d, Frames: %d\n", numChannels, numFrames));
+            string.append(String.format("IO State: %s\n", ioState));
+            string.append(String.format("Sample Rate: %d, Block Align: %d\n", sampleRate, blockAlign));
+            string.append(String.format("Valid Bits: %d, Bytes per sample: %d\n", validBits, bytesPerSample));
+            
+            return string.toString();
+        }
 
 	public static void main(String[] args)
 	{

@@ -6,6 +6,7 @@
 package view;
 
 import com.sun.media.sound.WaveFileReader;
+import java.awt.BorderLayout;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,12 +14,19 @@ import model.WavFile;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import model.WavFileException;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 /**
  *
  * @author carlosmagno
  */
 public class MainFrame extends javax.swing.JFrame {
+    
+    private static final int NUM_SAMPLES = 44000;
     
     WavFile wavFile;
     
@@ -39,21 +47,51 @@ public class MainFrame extends javax.swing.JFrame {
     private void initComponents() {
 
         mainPanel = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        textArea = new javax.swing.JTextArea();
+        graphPanel = new javax.swing.JPanel();
         menuBar = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         menuItemOpen = new javax.swing.JMenuItem();
+        menuItemQuit = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        textArea.setEditable(false);
+        textArea.setColumns(20);
+        textArea.setRows(5);
+        jScrollPane1.setViewportView(textArea);
+
+        javax.swing.GroupLayout graphPanelLayout = new javax.swing.GroupLayout(graphPanel);
+        graphPanel.setLayout(graphPanelLayout);
+        graphPanelLayout.setHorizontalGroup(
+            graphPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        graphPanelLayout.setVerticalGroup(
+            graphPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 201, Short.MAX_VALUE)
+        );
 
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(graphPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 376, Short.MAX_VALUE))
+                .addContainerGap())
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 275, Short.MAX_VALUE)
+            .addGroup(mainPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(graphPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         jMenu1.setText("File");
@@ -65,6 +103,19 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
         jMenu1.add(menuItemOpen);
+
+        menuItemQuit.setText("Quit");
+        menuItemQuit.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                menuItemQuitMouseClicked(evt);
+            }
+        });
+        menuItemQuit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemQuitActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menuItemQuit);
 
         menuBar.add(jMenu1);
 
@@ -78,7 +129,9 @@ public class MainFrame extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
 
         pack();
@@ -94,7 +147,11 @@ public class MainFrame extends javax.swing.JFrame {
         if(ret == JFileChooser.APPROVE_OPTION){
             try {
                 wavFile = WavFile.openWavFile(filech.getSelectedFile());
-                wavFile.display();
+                textArea.append(wavFile.getInfoString());
+                double[] samples = new double[wavFile.getNumChannels()* NUM_SAMPLES];
+                int nFrames = wavFile.readFrames(samples, NUM_SAMPLES);
+                textArea.append(nFrames + " frames lidos.\n");
+                showChart(wavFile.getNumChannels()* NUM_SAMPLES, samples);
             } catch (IOException ex) {
                 Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
             } catch (WavFileException ex) {
@@ -103,6 +160,43 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_menuItemOpenActionPerformed
 
+    private void menuItemQuitMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuItemQuitMouseClicked
+        // TODO add your handling code here:
+        
+    }//GEN-LAST:event_menuItemQuitMouseClicked
+
+    private void menuItemQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemQuitActionPerformed
+        // TODO add your handling code here:
+        System.exit(0);
+    }//GEN-LAST:event_menuItemQuitActionPerformed
+    
+    public void showChart(int N, double[] signal){
+        
+        String serieName = "Amplitudes de Amostras";
+        String tittle = "Amplitudes de Amostras";
+        String xAxisName = "Amostra";
+        String yAxisName = "Amplitude";
+        
+        XYSeries dataSerie = new XYSeries(serieName);
+        
+        for(int i = 0; i < N; i++){
+            dataSerie.add(i, signal[i]);
+        }
+        
+        XYSeriesCollection sCollection = new XYSeriesCollection();
+        sCollection.addSeries(dataSerie);
+        
+        JFreeChart jfreechart =  ChartFactory.createScatterPlot(tittle, xAxisName, yAxisName, sCollection);
+        
+        ChartPanel panel = new ChartPanel(jfreechart);
+        panel.setVisible(true);
+        
+        graphPanel.add(panel);
+        graphPanel.setLayout(new BorderLayout());
+        graphPanel.validate();
+        graphPanel.setVisible(true);
+    }
+    
     /**
      * @param args the command line arguments
      */
@@ -139,9 +233,13 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel graphPanel;
     private javax.swing.JMenu jMenu1;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem menuItemOpen;
+    private javax.swing.JMenuItem menuItemQuit;
+    private javax.swing.JTextArea textArea;
     // End of variables declaration//GEN-END:variables
 }
