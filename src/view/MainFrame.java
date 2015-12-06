@@ -18,6 +18,7 @@ import model.WavFileException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.renderer.category.ScatterRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jtransforms.dct.DoubleDCT_1D;
@@ -29,8 +30,7 @@ import org.jtransforms.utils.CommonUtils;
  */
 public class MainFrame extends javax.swing.JFrame {
     
-    private static final int NUM_SAMPLES = 44000;
-    private static final double FREQ_AMOST = 48000;
+    
     private double[] samples;
     
     WavFile wavFile;
@@ -167,8 +167,8 @@ public class MainFrame extends javax.swing.JFrame {
             try {
                 wavFile = WavFile.openWavFile(filech.getSelectedFile());
                 textArea.append(wavFile.getInfoString());
-                samples = new double[wavFile.getNumChannels()* NUM_SAMPLES];
-                int nFrames = wavFile.readFrames(samples, NUM_SAMPLES);
+                samples = new double[wavFile.getNumChannels()* (int)wavFile.getSampleRate()];
+                int nFrames = wavFile.readFrames(samples, (int)wavFile.getSampleRate());
                 textArea.append(nFrames + " frames lidos.\n");
                 
                 double valuesX[] = new double[samples.length];
@@ -176,7 +176,7 @@ public class MainFrame extends javax.swing.JFrame {
                     valuesX[i] = i;
                 }
                 
-                showChart(wavFile.getNumChannels()* NUM_SAMPLES,
+                showChart(wavFile.getNumChannels() * (int)wavFile.getSampleRate(),
                         samples,
                         valuesX,
                         "Amostra",
@@ -207,7 +207,7 @@ public class MainFrame extends javax.swing.JFrame {
             return;
         
         int N = samples.length;
-        double f1 = FREQ_AMOST / (2 * (N - 1));
+        double f1 = (double)wavFile.getSampleRate() / (2 * (N - 1));
         
         double[] valuesX = new double[samples.length];
         for(int i = 0; i < samples.length; i++){
