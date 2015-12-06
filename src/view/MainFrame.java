@@ -18,6 +18,7 @@ import model.WavFileException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.ScatterRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -238,8 +239,8 @@ public class MainFrame extends javax.swing.JFrame {
         XYSeriesCollection sCollection = new XYSeriesCollection();
         sCollection.addSeries(dataSerie);
         
-        JFreeChart jfreechart =  ChartFactory.createScatterPlot(tittle, xAxisName, yAxisName, sCollection);
-        
+        //JFreeChart jfreechart = ChartFactory.createScatterPlot(tittle, xAxisName, yAxisName, sCollection);
+        JFreeChart jfreechart = ChartFactory.createHistogram(tittle, xAxisName, yAxisName, sCollection, PlotOrientation.VERTICAL, true, true, false);
         ChartPanel panel = new ChartPanel(jfreechart);
         panel.setVisible(true);
         
