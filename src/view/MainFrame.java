@@ -9,11 +9,15 @@ import com.sun.media.sound.WaveFileReader;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.WavFile;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import model.Frequency;
+import model.NotesAnalyser;
 import model.WavFileException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -31,7 +35,7 @@ import org.jtransforms.utils.CommonUtils;
  */
 public class MainFrame extends javax.swing.JFrame {
     
-    
+    private int N_IMPORTANT_NOTES = 10;
     private double[] samples;
     
     WavFile wavFile;
@@ -219,6 +223,9 @@ public class MainFrame extends javax.swing.JFrame {
         dtc_calculator.forward(samples, true);
         
         showChart(N, samples, valuesX, "Hz", "Amplitude", "DCT", "DCT");
+        String[] mostImportantNotes = NotesAnalyser.getNMostImportantNotesFrom(N_IMPORTANT_NOTES, Frequency.gerenateFrequencies(samples, valuesX));
+        JOptionPane.showMessageDialog(this, "As " + N_IMPORTANT_NOTES + " notas mais importanes notas são:\n " + 
+                Arrays.toString(mostImportantNotes));
     }//GEN-LAST:event_menuItemDCTActionPerformed
     
     public void showChart(int N, double[] valuesY, double[] valuesX, String axisX, String axisY, String graphName, String dataName){
